@@ -9,6 +9,7 @@ const params = {
 };
 
 const gui = new dat.GUI();
+gui.hide();
 
 const canvas = document.getElementById("root");
 
