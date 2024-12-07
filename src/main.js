@@ -63,8 +63,6 @@ directionalLight.shadow.mapSize.height = 256;
 directionalLight.position.set(6.94011, 11.3524, -17.6677);
 scene.add(directionalLight);
 
-scene.add(new THREE.DirectionalLightHelper(directionalLight, 1));
-
 // textures
 const bakedTexture = textureLoader.load("/models/baked4k.jpg");
 bakedTexture.flipY = false;
@@ -86,6 +84,8 @@ const rockMaterial = new THREE.MeshStandardMaterial({
         params.rockColor.b / 255
     ),
 });
+
+// load model
 
 let explodingRocks = [];
 let walls = [];
@@ -120,24 +120,6 @@ gltfLoader.load("/models/rock-exploding.glb", (loadedAsset) => {
     ground.receiveShadow = true;
 
     scene.add(loadedAsset.scene);
-});
-
-// debug
-
-gui.addColor(params, "rockColor").onChange((value) => {
-    rockMaterial.color = new THREE.Color(
-        value.r / 255,
-        value.g / 255,
-        value.b / 255
-    );
-});
-
-gui.addColor(params, "directionalLightColor").onChange((value) => {
-    directionalLight.color = new THREE.Color(
-        value.r / 255,
-        value.g / 255,
-        value.b / 255
-    );
 });
 
 // physics
@@ -208,6 +190,24 @@ import("@dimforge/rapier3d").then((RAPIER) => {
     }
 });
 
+// debug
+
+gui.addColor(params, "rockColor").onChange((value) => {
+    rockMaterial.color = new THREE.Color(
+        value.r / 255,
+        value.g / 255,
+        value.b / 255
+    );
+});
+
+gui.addColor(params, "directionalLightColor").onChange((value) => {
+    directionalLight.color = new THREE.Color(
+        value.r / 255,
+        value.g / 255,
+        value.b / 255
+    );
+});
+
 // developement stuff
 
 const testMaterial = new THREE.MeshBasicMaterial({
@@ -222,12 +222,55 @@ scene.add(groundMesh);
 
 groundMesh.visible = false;
 
+// raycast
+
+const raycaster = new THREE.Raycaster();
+
+const handleClick = (clientX, clientY) => {
+    const mouse = {
+        x: (clientX / window.innerWidth) * 2 - 1,
+        y: -((clientY / window.innerHeight) * 2 - 1),
+    };
+
+    raycaster.setFromCamera(mouse, camera);
+
+    const bodies = explodingRocks.map((data) => data.mesh);
+    const intersects = raycaster.intersectObjects(bodies);
+
+    const uniqueIntersect = new Set();
+    for (const intersect of intersects) {
+        const name = intersect.object.name;
+        if (!uniqueIntersect.has(name)) {
+            // apply impulse
+            const data = explodingRocks.find((data) => data.mesh.name === name);
+
+            data.rigidBody.applyImpulse(
+                {
+                    x: Math.random() * 10 - 5,
+                    y: Math.random() * 20.0 - 10.0,
+                    z: Math.random() * 10 - 5,
+                },
+                true
+            );
+            uniqueIntersect.add(name);
+        }
+    }
+};
+
+window.addEventListener("click", (event) => {
+    handleClick(event.clientX, event.clientY);
+});
+
+window.addEventListener("touchstart", (event) => {
+    const touch = event.touches[0];
+    handleClick(touch.clientX, touch.clientY);
+});
+
 // loop
 
 const clock = new THREE.Clock();
 let lastElapsedTime = 0;
 
-let appliedForce = false;
 const loop = () => {
     // delta time
     const elapsedTime = clock.getElapsedTime();
@@ -244,20 +287,6 @@ const loop = () => {
             explodingRock.mesh.quaternion.copy(
                 explodingRock.rigidBody.rotation()
             );
-        }
-
-        if (!appliedForce) {
-            for (const explodingRock of explodingRocks) {
-                explodingRock.rigidBody.applyImpulse(
-                    {
-                        x: Math.random() * 10 - 5,
-                        y: Math.random() * 20.0 - 10.0,
-                        z: Math.random() * 10 - 5,
-                    },
-                    true
-                );
-            }
-            appliedForce = true;
         }
     }
 
