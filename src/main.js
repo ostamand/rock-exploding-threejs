@@ -65,7 +65,7 @@ directionalLight.position.set(6.94011, 11.3524, -17.6677);
 scene.add(directionalLight);
 
 // textures
-const bakedTexture = textureLoader.load("/models/baked4k.jpg");
+const bakedTexture = textureLoader.load("models/baked4k.jpg");
 bakedTexture.flipY = false;
 bakedTexture.colorSpace = THREE.SRGBColorSpace;
 
@@ -90,7 +90,7 @@ const rockMaterial = new THREE.MeshStandardMaterial({
 
 let explodingRocks = [];
 let walls = [];
-gltfLoader.load("/models/rock-exploding.glb", (loadedAsset) => {
+gltfLoader.load("models/rock-exploding.glb", (loadedAsset) => {
     loadedAsset.scene.traverse((child) => {
         if (child.isMesh) {
             if (child.name.startsWith("explodingRocks")) {
