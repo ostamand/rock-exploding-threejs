@@ -66,7 +66,7 @@ scene.add(directionalLight);
 scene.add(new THREE.DirectionalLightHelper(directionalLight, 1));
 
 // textures
-const bakedTexture = textureLoader.load("/models/baked2k_v2.jpg");
+const bakedTexture = textureLoader.load("/models/baked4k.jpg");
 bakedTexture.flipY = false;
 bakedTexture.colorSpace = THREE.SRGBColorSpace;
 
@@ -88,7 +88,7 @@ const rockMaterial = new THREE.MeshStandardMaterial({
 });
 
 let explodingRocks = [];
-
+let walls = [];
 gltfLoader.load("/models/rock-exploding.glb", (loadedAsset) => {
     loadedAsset.scene.traverse((child) => {
         if (child.isMesh) {
@@ -102,8 +102,13 @@ gltfLoader.load("/models/rock-exploding.glb", (loadedAsset) => {
             } else {
                 child.material = bakedMaterial;
             }
+
             if (child.name.startsWith("plants")) {
                 child.material.side = THREE.DoubleSide;
+            }
+            if (child.name.startsWith("wall")) {
+                child.visible = false;
+                walls.push(child);
             }
         }
     });
@@ -113,7 +118,6 @@ gltfLoader.load("/models/rock-exploding.glb", (loadedAsset) => {
     );
 
     ground.receiveShadow = true;
-    //console.log(loadedAsset.scene);
 
     scene.add(loadedAsset.scene);
 });
@@ -138,7 +142,6 @@ gui.addColor(params, "directionalLightColor").onChange((value) => {
 
 // physics
 let world = null;
-let testCubeRigidBody = null;
 import("@dimforge/rapier3d").then((RAPIER) => {
     const gravity = { x: 0.0, y: -9.81, z: 0 };
     world = new RAPIER.World(gravity);
@@ -151,6 +154,54 @@ import("@dimforge/rapier3d").then((RAPIER) => {
     );
     groundColliderDesc.setTranslation(0, -0.25, 0);
     world.createCollider(groundColliderDesc);
+
+    // walls
+    for (const wall of walls) {
+        const wallSize = {
+            sizeX: Math.abs(
+                wall.geometry.boundingBox.max.x -
+                    wall.geometry.boundingBox.min.x
+            ),
+            sizeY: Math.abs(
+                wall.geometry.boundingBox.max.y -
+                    wall.geometry.boundingBox.min.y
+            ),
+            sizeZ: Math.abs(
+                wall.geometry.boundingBox.max.z -
+                    wall.geometry.boundingBox.min.z
+            ),
+        };
+
+        // console.log(wall.geometry.attributes.position.array.min);
+
+        const cubeColliderDesc = RAPIER.ColliderDesc.cuboid(
+            wallSize.sizeX / 2,
+            wallSize.sizeY / 2,
+            wallSize.sizeZ / 2
+        );
+
+        cubeColliderDesc.setTranslation(
+            wall.position.x,
+            wall.position.y,
+            wall.position.z
+        );
+
+        const testGeometry = new THREE.BoxGeometry(
+            wallSize.x,
+            wallSize.y,
+            wallSize.z
+        );
+
+        console.log(wallSize);
+
+        const testMesh = new THREE.Mesh(testGeometry, testMaterial);
+        testMesh.position.copy(wall.position);
+        testMesh.quaternion.copy(wall.quaternion);
+
+        scene.add(testMesh);
+
+        world.createCollider(cubeColliderDesc);
+    }
 
     // create rigid body and collider for all exploding rocks
     for (const explodingRock of explodingRocks) {
