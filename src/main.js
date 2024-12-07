@@ -87,11 +87,17 @@ const rockMaterial = new THREE.MeshStandardMaterial({
     ),
 });
 
+let explodingRocks = [];
+
 gltfLoader.load("/models/rock-exploding.glb", (loadedAsset) => {
     loadedAsset.scene.traverse((child) => {
         if (child.isMesh) {
             if (child.name.startsWith("explodingRocks")) {
+                explodingRocks.push({
+                    mesh: child,
+                });
                 child.material = rockMaterial;
+                child.material.side = THREE.DoubleSide;
                 child.castShadow = true;
             } else {
                 child.material = bakedMaterial;
@@ -131,22 +137,93 @@ gui.addColor(params, "directionalLightColor").onChange((value) => {
 });
 
 // physics
+let world = null;
+let testCubeRigidBody = null;
 import("@dimforge/rapier3d").then((RAPIER) => {
     const gravity = { x: 0.0, y: -9.81, z: 0 };
-    const world = new RAPIER.World(gravity);
+    world = new RAPIER.World(gravity);
 
-    // RAPIER.ColliderDesc.cuboid()
+    // ground
+    const groundColliderDesc = RAPIER.ColliderDesc.cuboid(
+        10 / 2,
+        0.5 / 2,
+        10 / 2
+    );
+    groundColliderDesc.setTranslation(0, -0.25, 0);
+    world.createCollider(groundColliderDesc);
+
+    // create rigid body and collider for all exploding rocks
+    for (const explodingRock of explodingRocks) {
+        const rigidBodyDesc = RAPIER.RigidBodyDesc.dynamic().setTranslation(
+            explodingRock.mesh.position.x,
+            explodingRock.mesh.position.y,
+            explodingRock.mesh.position.z
+        );
+        const explodingRockRigidBody = world.createRigidBody(rigidBodyDesc);
+        const colliderDesc = RAPIER.ColliderDesc.convexHull(
+            explodingRock.mesh.geometry.attributes.position.array
+        );
+
+        world
+            .createCollider(colliderDesc, explodingRockRigidBody)
+            .setRestitution(0.7);
+
+        explodingRock.rigidBody = explodingRockRigidBody;
+    }
 });
+
+// developement stuff
+
+const testMaterial = new THREE.MeshBasicMaterial({
+    wireframe: true,
+    color: "white",
+});
+
+const groundGeometry = new THREE.BoxGeometry(10, 0.5, 10);
+const groundMesh = new THREE.Mesh(groundGeometry, testMaterial);
+groundMesh.position.set(0, -0.25, 0);
+scene.add(groundMesh);
+
+groundMesh.visible = false;
 
 // loop
 
 const clock = new THREE.Clock();
 let lastElapsedTime = 0;
+
+let appliedForce = false;
 const loop = () => {
     // delta time
     const elapsedTime = clock.getElapsedTime();
     const deltaTime = elapsedTime - lastElapsedTime;
     lastElapsedTime = elapsedTime;
+
+    if (world) {
+        world.step();
+
+        for (const explodingRock of explodingRocks) {
+            explodingRock.mesh.position.copy(
+                explodingRock.rigidBody.translation()
+            );
+            explodingRock.mesh.quaternion.copy(
+                explodingRock.rigidBody.rotation()
+            );
+        }
+
+        if (!appliedForce) {
+            for (const explodingRock of explodingRocks) {
+                explodingRock.rigidBody.applyImpulse(
+                    {
+                        x: Math.random() * 10 - 5,
+                        y: Math.random() * 20.0 - 10.0,
+                        z: Math.random() * 10 - 5,
+                    },
+                    true
+                );
+            }
+            appliedForce = true;
+        }
+    }
 
     renderer.render(scene, camera);
     controls.update(deltaTime);
