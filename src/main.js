@@ -107,7 +107,7 @@ gltfLoader.load("/models/rock-exploding.glb", (loadedAsset) => {
                 child.material.side = THREE.DoubleSide;
             }
             if (child.name.startsWith("wall")) {
-                child.visible = false;
+                //child.visible = false;
                 walls.push(child);
             }
         }
@@ -157,27 +157,13 @@ import("@dimforge/rapier3d").then((RAPIER) => {
 
     // walls
     for (const wall of walls) {
-        const wallSize = {
-            sizeX: Math.abs(
-                wall.geometry.boundingBox.max.x -
-                    wall.geometry.boundingBox.min.x
-            ),
-            sizeY: Math.abs(
-                wall.geometry.boundingBox.max.y -
-                    wall.geometry.boundingBox.min.y
-            ),
-            sizeZ: Math.abs(
-                wall.geometry.boundingBox.max.z -
-                    wall.geometry.boundingBox.min.z
-            ),
-        };
-
-        // console.log(wall.geometry.attributes.position.array.min);
+        let target = new THREE.Vector3();
+        wall.geometry.boundingBox.getSize(target);
 
         const cubeColliderDesc = RAPIER.ColliderDesc.cuboid(
-            wallSize.sizeX / 2,
-            wallSize.sizeY / 2,
-            wallSize.sizeZ / 2
+            target.x / 2,
+            target.y / 2,
+            target.z / 2
         );
 
         cubeColliderDesc.setTranslation(
@@ -185,19 +171,18 @@ import("@dimforge/rapier3d").then((RAPIER) => {
             wall.position.y,
             wall.position.z
         );
+        cubeColliderDesc.setRotation(wall.quaternion);
 
         const testGeometry = new THREE.BoxGeometry(
-            wallSize.x,
-            wallSize.y,
-            wallSize.z
+            target.x,
+            target.y,
+            target.z
         );
-
-        console.log(wallSize);
 
         const testMesh = new THREE.Mesh(testGeometry, testMaterial);
         testMesh.position.copy(wall.position);
         testMesh.quaternion.copy(wall.quaternion);
-
+        testMesh.visible = false;
         scene.add(testMesh);
 
         world.createCollider(cubeColliderDesc);
