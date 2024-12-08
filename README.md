@@ -41,4 +41,4 @@ npm run dev
 
 ### Live Demo
 
-Check out the project live: [Exploding Rocks!](https://ostamand.github.io/rock-exploding-threejs/)
+Check out the project live: [Exploding Rocks!](https://ostamand.github.io/rock-exploding-threejs/).

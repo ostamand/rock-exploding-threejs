@@ -9,8 +9,8 @@ import Inputs from "./inputs.js";
 new Physics();
 
 const params = {
-    rockColor: { r: 51, g: 46, b: 46 },
-    directionalLightColor: { r: 49, g: 148, b: 176 },
+    rockColor: { r: 6, g: 4, b: 4 },
+    directionalLightColor: { r: 55, g: 61, b: 156 },
 };
 
 const gui = new dat.GUI();
@@ -56,7 +56,7 @@ renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 renderer.setClearColor(0x3b3b3b);
 
 // lights
-const ambientLight = new THREE.AmbientLight(0xffffff, 2);
+const ambientLight = new THREE.AmbientLight(0xffffff, 4);
 scene.add(ambientLight);
 
 const directionalLight = new THREE.DirectionalLight(
