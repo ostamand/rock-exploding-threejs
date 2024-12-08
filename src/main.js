@@ -4,6 +4,7 @@ import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import * as dat from "dat.gui";
 import { app, envStore } from "./stores.js";
 import Physics from "./physics.js";
+import Inputs from "./inputs.js";
 
 new Physics();
 
@@ -32,6 +33,11 @@ const camera = new THREE.PerspectiveCamera(
     100
 );
 camera.position.set(10, 8, 12);
+
+// inputs
+
+const raycaster = new THREE.Raycaster();
+new Inputs(camera, raycaster);
 
 // orbit controls
 const controls = new OrbitControls(camera, canvas);
@@ -165,52 +171,6 @@ scene.add(groundMesh);
 
 groundMesh.visible = false;
 
-// raycast
-
-const raycaster = new THREE.Raycaster();
-
-const handleClick = (clientX, clientY) => {
-    const mouse = {
-        x: (clientX / window.innerWidth) * 2 - 1,
-        y: -((clientY / window.innerHeight) * 2 - 1),
-    };
-
-    raycaster.setFromCamera(mouse, camera);
-
-    const { explodingRocks } = envStore.getState();
-
-    const bodies = explodingRocks.map((data) => data.mesh);
-    const intersects = raycaster.intersectObjects(bodies);
-
-    const uniqueIntersect = new Set();
-    for (const intersect of intersects) {
-        const name = intersect.object.name;
-        if (!uniqueIntersect.has(name)) {
-            // apply impulse
-            const data = explodingRocks.find((data) => data.mesh.name === name);
-
-            data.rigidBody.applyImpulse(
-                {
-                    x: Math.random() * 2 - 1,
-                    y: Math.random() * 2 - 1,
-                    z: Math.random() * 2 - 1,
-                },
-                true
-            );
-            uniqueIntersect.add(name);
-        }
-    }
-};
-
-window.addEventListener("click", (event) => {
-    handleClick(event.clientX, event.clientY);
-});
-
-window.addEventListener("touchstart", (event) => {
-    const touch = event.touches[0];
-    handleClick(touch.clientX, touch.clientY);
-});
-
 // loop
 
 const clock = new THREE.Clock();
@@ -221,8 +181,7 @@ const loop = () => {
     const deltaTime = elapsedTime - lastElapsedTime;
     lastElapsedTime = elapsedTime;
 
-    const { world } = envStore.getState();
-    const { explodingRocks } = envStore.getState();
+    const { world, explodingRocks } = envStore.getState();
 
     world.step();
 
