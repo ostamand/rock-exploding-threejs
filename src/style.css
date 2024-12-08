@@ -1,18 +1,14 @@
 * {
   margin: 0px;
   padding: 0px;
- 
-}
-
-h1 {
-  font-family: "Quicksand", sans-serif;
-  font-optical-sizing: auto;
-  font-weight: 400;
-  font-style: normal;
 }
 
 body {
   overflow: hidden;
+  font-family: "Quicksand", sans-serif;
+  font-optical-sizing: auto;
+  font-weight: 400;
+  font-style: normal;  
 }
 
 .overlay {
@@ -40,4 +36,29 @@ body {
 
 .start-btn:hover {
   transform: scale(1.1);
+}
+
+.reset-btn {
+  position: absolute;
+  right: 30px;
+  top: 10px;
+  font-size: 26px;
+  color: white;
+  background-color: black;
+  opacity: 0%;
+  padding: 10px 20px;
+  border-radius: 12px;
+  transition: transform 0.5s, opacity 0.5s;
+  cursor: pointer;
+  z-index: -1;
+}
+
+.reset-btn.active {
+  opacity: 50%;
+  z-index: 1;
+}
+
+.reset-btn:hover {
+  transform: scale(1.1);
+  opacity: 100%;
 }

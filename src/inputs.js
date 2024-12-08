@@ -19,8 +19,12 @@ export default class Inputs {
             .addEventListener("click", (event) => {
                 event.stopImmediatePropagation();
                 const { setPlaying } = app.getState();
+
                 const overlay = document.querySelector(".overlay");
                 overlay.classList.remove("active");
+
+                document.querySelector(".reset-btn").classList.add("active");
+
                 window.setTimeout(() => {
                     overlay.remove();
                     setPlaying();
