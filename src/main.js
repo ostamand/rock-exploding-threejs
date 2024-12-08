@@ -183,6 +183,7 @@ const loop = () => {
 
     const { world, explodingRocks } = envStore.getState();
 
+    world.timestep = Math.min(deltaTime, 0.1);
     world.step();
 
     for (const explodingRock of explodingRocks) {
