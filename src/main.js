@@ -2,10 +2,14 @@ import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import * as dat from "dat.gui";
-const RAPIER = await import(
-    "https://cdn.skypack.dev/@dimforge/rapier3d-compat"
+
+const RAPIER = import("https://cdn.skypack.dev/@dimforge/rapier3d-compat").then(
+    (RAPIER) => {
+        RAPIER.init().then(() => {
+            console.log("loaded");
+        });
+    }
 );
-await RAPIER.init();
 
 let envLoaded = false;
 let explodingRocks = [];
