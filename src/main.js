@@ -3,6 +3,11 @@ import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import * as dat from "dat.gui";
 
+let envLoaded = false;
+let explodingRocks = [];
+let walls = [];
+let world = null;
+
 const params = {
     rockColor: { r: 51, g: 46, b: 46 },
     directionalLightColor: { r: 49, g: 148, b: 176 },
@@ -87,9 +92,6 @@ const rockMaterial = new THREE.MeshStandardMaterial({
 });
 
 // load model
-
-let explodingRocks = [];
-let walls = [];
 gltfLoader.load("models/rock-exploding.glb", (loadedAsset) => {
     loadedAsset.scene.traverse((child) => {
         if (child.isMesh) {
@@ -117,78 +119,80 @@ gltfLoader.load("models/rock-exploding.glb", (loadedAsset) => {
     const ground = loadedAsset.scene.children.find(
         (child) => child.name === "ground"
     );
-
     ground.receiveShadow = true;
-
     scene.add(loadedAsset.scene);
-});
 
-// physics
-let world = null;
-import("@dimforge/rapier3d").then((RAPIER) => {
-    const gravity = { x: 0.0, y: -9.81, z: 0 };
-    world = new RAPIER.World(gravity);
+    // physics
 
-    // ground
-    const groundColliderDesc = RAPIER.ColliderDesc.cuboid(
-        10 / 2,
-        0.5 / 2,
-        10 / 2
-    );
-    groundColliderDesc.setTranslation(0, -0.25, 0);
-    world.createCollider(groundColliderDesc);
+    import("@dimforge/rapier3d").then((RAPIER) => {
+        const gravity = { x: 0.0, y: -9.81, z: 0 };
+        world = new RAPIER.World(gravity);
 
-    // walls
-    for (const wall of walls) {
-        let target = new THREE.Vector3();
-        wall.geometry.boundingBox.getSize(target);
-
-        const cubeColliderDesc = RAPIER.ColliderDesc.cuboid(
-            target.x / 2,
-            target.y / 2,
-            target.z / 2
+        // ground
+        const groundColliderDesc = RAPIER.ColliderDesc.cuboid(
+            10 / 2,
+            0.5 / 2,
+            10 / 2
         );
+        groundColliderDesc.setTranslation(0, -0.25, 0);
+        world.createCollider(groundColliderDesc);
 
-        cubeColliderDesc.setTranslation(
-            wall.position.x,
-            wall.position.y,
-            wall.position.z
-        );
-        cubeColliderDesc.setRotation(wall.quaternion);
+        // walls
+        for (const wall of walls) {
+            let target = new THREE.Vector3();
+            wall.geometry.boundingBox.getSize(target);
 
-        const testGeometry = new THREE.BoxGeometry(
-            target.x,
-            target.y,
-            target.z
-        );
+            const cubeColliderDesc = RAPIER.ColliderDesc.cuboid(
+                target.x / 2,
+                target.y / 2,
+                target.z / 2
+            );
 
-        const testMesh = new THREE.Mesh(testGeometry, testMaterial);
-        testMesh.position.copy(wall.position);
-        testMesh.quaternion.copy(wall.quaternion);
-        testMesh.visible = false;
-        scene.add(testMesh);
+            cubeColliderDesc.setTranslation(
+                wall.position.x,
+                wall.position.y,
+                wall.position.z
+            );
+            cubeColliderDesc.setRotation(wall.quaternion);
 
-        world.createCollider(cubeColliderDesc);
-    }
+            const testGeometry = new THREE.BoxGeometry(
+                target.x,
+                target.y,
+                target.z
+            );
 
-    // create rigid body and collider for all exploding rocks
-    for (const explodingRock of explodingRocks) {
-        const rigidBodyDesc = RAPIER.RigidBodyDesc.dynamic().setTranslation(
-            explodingRock.mesh.position.x,
-            explodingRock.mesh.position.y,
-            explodingRock.mesh.position.z
-        );
-        const explodingRockRigidBody = world.createRigidBody(rigidBodyDesc);
-        const colliderDesc = RAPIER.ColliderDesc.convexHull(
-            explodingRock.mesh.geometry.attributes.position.array
-        );
+            const testMesh = new THREE.Mesh(testGeometry, testMaterial);
+            testMesh.position.copy(wall.position);
+            testMesh.quaternion.copy(wall.quaternion);
+            testMesh.visible = false;
+            scene.add(testMesh);
 
-        world
-            .createCollider(colliderDesc, explodingRockRigidBody)
-            .setRestitution(0.7);
+            world.createCollider(cubeColliderDesc);
+        }
 
-        explodingRock.rigidBody = explodingRockRigidBody;
-    }
+        // create rigid body and collider for all exploding rocks
+        for (const explodingRock of explodingRocks) {
+            const rigidBodyDesc = RAPIER.RigidBodyDesc.dynamic().setTranslation(
+                explodingRock.mesh.position.x,
+                explodingRock.mesh.position.y,
+                explodingRock.mesh.position.z
+            );
+            const explodingRockRigidBody = world.createRigidBody(rigidBodyDesc);
+            const colliderDesc = RAPIER.ColliderDesc.convexHull(
+                explodingRock.mesh.geometry.attributes.position.array
+            )
+                .setDensity(0.1)
+                .setFriction(0.4);
+
+            world
+                .createCollider(colliderDesc, explodingRockRigidBody)
+                .setRestitution(0.4);
+
+            explodingRock.rigidBody = explodingRockRigidBody;
+
+            envLoaded = true;
+        }
+    });
 });
 
 // debug
@@ -247,9 +251,9 @@ const handleClick = (clientX, clientY) => {
 
             data.rigidBody.applyImpulse(
                 {
-                    x: Math.random() * 10 - 5,
-                    y: Math.random() * 20.0 - 10.0,
-                    z: Math.random() * 10 - 5,
+                    x: Math.random() * 5 - 2.5,
+                    y: Math.random() * 5 - 2.5,
+                    z: Math.random() * 5 - 2.5,
                 },
                 true
             );
@@ -278,9 +282,8 @@ const loop = () => {
     const deltaTime = elapsedTime - lastElapsedTime;
     lastElapsedTime = elapsedTime;
 
-    if (world) {
+    if (envLoaded) {
         world.step();
-
         for (const explodingRock of explodingRocks) {
             explodingRock.mesh.position.copy(
                 explodingRock.rigidBody.translation()
@@ -290,7 +293,6 @@ const loop = () => {
             );
         }
     }
-
     renderer.render(scene, camera);
     controls.update(deltaTime);
     window.requestAnimationFrame(loop);
