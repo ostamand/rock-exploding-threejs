@@ -1,9 +1,43 @@
 * {
   margin: 0px;
   padding: 0px;
-  
+ 
+}
+
+h1 {
+  font-family: "Quicksand", sans-serif;
+  font-optical-sizing: auto;
+  font-weight: 400;
+  font-style: normal;
 }
 
 body {
   overflow: hidden;
+}
+
+.overlay {
+  position: absolute;
+  background-color: black;
+  opacity: 0%;
+  height: 100%;
+  width: 100%;
+  transition: opacity 1s ease;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.overlay.active {
+  opacity: 75%;
+}
+
+.start-btn {
+  font-size: 75px;
+  color: white;
+  transition: transform 1s ease-out;
+  cursor: pointer;
+}
+
+.start-btn:hover {
+  transform: scale(1.1);
 }
