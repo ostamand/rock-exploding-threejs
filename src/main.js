@@ -2,19 +2,10 @@ import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import * as dat from "dat.gui";
+import { app, envStore } from "./stores.js";
+import Physics from "./physics.js";
 
-const RAPIER = import("https://cdn.skypack.dev/@dimforge/rapier3d-compat").then(
-    (RAPIER) => {
-        RAPIER.init().then(() => {
-            console.log("loaded");
-        });
-    }
-);
-
-let envLoaded = false;
-let explodingRocks = [];
-let walls = [];
-let world = null;
+new Physics();
 
 const params = {
     rockColor: { r: 51, g: 46, b: 46 },
@@ -101,6 +92,9 @@ const rockMaterial = new THREE.MeshStandardMaterial({
 
 // load model
 gltfLoader.load("models/rock-exploding.glb", (loadedAsset) => {
+    const explodingRocks = [];
+    const walls = [];
+
     loadedAsset.scene.traverse((child) => {
         if (child.isMesh) {
             if (child.name.startsWith("explodingRocks")) {
@@ -127,78 +121,16 @@ gltfLoader.load("models/rock-exploding.glb", (loadedAsset) => {
     const ground = loadedAsset.scene.children.find(
         (child) => child.name === "ground"
     );
+
     ground.receiveShadow = true;
+
     scene.add(loadedAsset.scene);
 
-    // physics
-
-    const gravity = { x: 0.0, y: -9.81, z: 0 };
-    world = new RAPIER.World(gravity);
-
-    // ground
-    const groundColliderDesc = RAPIER.ColliderDesc.cuboid(
-        10 / 2,
-        0.5 / 2,
-        10 / 2
-    );
-    groundColliderDesc.setTranslation(0, -0.25, 0);
-    world.createCollider(groundColliderDesc);
-
-    // walls
-    for (const wall of walls) {
-        let target = new THREE.Vector3();
-        wall.geometry.boundingBox.getSize(target);
-
-        const cubeColliderDesc = RAPIER.ColliderDesc.cuboid(
-            target.x / 2,
-            target.y / 2,
-            target.z / 2
-        );
-
-        cubeColliderDesc.setTranslation(
-            wall.position.x,
-            wall.position.y,
-            wall.position.z
-        );
-        cubeColliderDesc.setRotation(wall.quaternion);
-
-        const testGeometry = new THREE.BoxGeometry(
-            target.x,
-            target.y,
-            target.z
-        );
-
-        const testMesh = new THREE.Mesh(testGeometry, testMaterial);
-        testMesh.position.copy(wall.position);
-        testMesh.quaternion.copy(wall.quaternion);
-        testMesh.visible = false;
-        scene.add(testMesh);
-
-        world.createCollider(cubeColliderDesc);
-    }
-
-    // create rigid body and collider for all exploding rocks
-    for (const explodingRock of explodingRocks) {
-        const rigidBodyDesc = RAPIER.RigidBodyDesc.dynamic().setTranslation(
-            explodingRock.mesh.position.x,
-            explodingRock.mesh.position.y,
-            explodingRock.mesh.position.z
-        );
-        const explodingRockRigidBody = world.createRigidBody(rigidBodyDesc);
-        const colliderDesc = RAPIER.ColliderDesc.convexHull(
-            explodingRock.mesh.geometry.attributes.position.array
-        )
-            .setDensity(0.1)
-            .setFriction(0.4);
-
-        world
-            .createCollider(colliderDesc, explodingRockRigidBody)
-            .setRestitution(0.4);
-
-        explodingRock.rigidBody = explodingRockRigidBody;
-
-        envLoaded = true;
-    }
+    const { setEnvLoaded } = app.getState();
+    const { setExplodingRocks, setWalls } = envStore.getState();
+    setExplodingRocks(explodingRocks);
+    setWalls(walls);
+    setEnvLoaded();
 });
 
 // debug
@@ -245,6 +177,8 @@ const handleClick = (clientX, clientY) => {
 
     raycaster.setFromCamera(mouse, camera);
 
+    const { explodingRocks } = envStore.getState();
+
     const bodies = explodingRocks.map((data) => data.mesh);
     const intersects = raycaster.intersectObjects(bodies);
 
@@ -257,9 +191,9 @@ const handleClick = (clientX, clientY) => {
 
             data.rigidBody.applyImpulse(
                 {
-                    x: Math.random() * 5 - 2.5,
-                    y: Math.random() * 5 - 2.5,
-                    z: Math.random() * 5 - 2.5,
+                    x: Math.random() * 2 - 1,
+                    y: Math.random() * 2 - 1,
+                    z: Math.random() * 2 - 1,
                 },
                 true
             );
@@ -281,27 +215,30 @@ window.addEventListener("touchstart", (event) => {
 
 const clock = new THREE.Clock();
 let lastElapsedTime = 0;
-
 const loop = () => {
     // delta time
     const elapsedTime = clock.getElapsedTime();
     const deltaTime = elapsedTime - lastElapsedTime;
     lastElapsedTime = elapsedTime;
 
-    if (envLoaded) {
-        world.step();
-        for (const explodingRock of explodingRocks) {
-            explodingRock.mesh.position.copy(
-                explodingRock.rigidBody.translation()
-            );
-            explodingRock.mesh.quaternion.copy(
-                explodingRock.rigidBody.rotation()
-            );
-        }
+    const { world } = envStore.getState();
+    const { explodingRocks } = envStore.getState();
+
+    world.step();
+
+    for (const explodingRock of explodingRocks) {
+        explodingRock.mesh.position.copy(explodingRock.rigidBody.translation());
+        explodingRock.mesh.quaternion.copy(explodingRock.rigidBody.rotation());
     }
+
     renderer.render(scene, camera);
     controls.update(deltaTime);
     window.requestAnimationFrame(loop);
 };
 
-loop();
+const unsubStartLoop = app.subscribe((state) => {
+    if (state.RAPIER && state.envLoaded) {
+        loop();
+        unsubStartLoop();
+    }
+});
