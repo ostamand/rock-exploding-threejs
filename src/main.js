@@ -2,6 +2,10 @@ import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import * as dat from "dat.gui";
+const RAPIER = await import(
+    "https://cdn.skypack.dev/@dimforge/rapier3d-compat"
+);
+await RAPIER.init();
 
 let envLoaded = false;
 let explodingRocks = [];
@@ -124,75 +128,73 @@ gltfLoader.load("models/rock-exploding.glb", (loadedAsset) => {
 
     // physics
 
-    import("@dimforge/rapier3d").then((RAPIER) => {
-        const gravity = { x: 0.0, y: -9.81, z: 0 };
-        world = new RAPIER.World(gravity);
+    const gravity = { x: 0.0, y: -9.81, z: 0 };
+    world = new RAPIER.World(gravity);
 
-        // ground
-        const groundColliderDesc = RAPIER.ColliderDesc.cuboid(
-            10 / 2,
-            0.5 / 2,
-            10 / 2
+    // ground
+    const groundColliderDesc = RAPIER.ColliderDesc.cuboid(
+        10 / 2,
+        0.5 / 2,
+        10 / 2
+    );
+    groundColliderDesc.setTranslation(0, -0.25, 0);
+    world.createCollider(groundColliderDesc);
+
+    // walls
+    for (const wall of walls) {
+        let target = new THREE.Vector3();
+        wall.geometry.boundingBox.getSize(target);
+
+        const cubeColliderDesc = RAPIER.ColliderDesc.cuboid(
+            target.x / 2,
+            target.y / 2,
+            target.z / 2
         );
-        groundColliderDesc.setTranslation(0, -0.25, 0);
-        world.createCollider(groundColliderDesc);
 
-        // walls
-        for (const wall of walls) {
-            let target = new THREE.Vector3();
-            wall.geometry.boundingBox.getSize(target);
+        cubeColliderDesc.setTranslation(
+            wall.position.x,
+            wall.position.y,
+            wall.position.z
+        );
+        cubeColliderDesc.setRotation(wall.quaternion);
 
-            const cubeColliderDesc = RAPIER.ColliderDesc.cuboid(
-                target.x / 2,
-                target.y / 2,
-                target.z / 2
-            );
+        const testGeometry = new THREE.BoxGeometry(
+            target.x,
+            target.y,
+            target.z
+        );
 
-            cubeColliderDesc.setTranslation(
-                wall.position.x,
-                wall.position.y,
-                wall.position.z
-            );
-            cubeColliderDesc.setRotation(wall.quaternion);
+        const testMesh = new THREE.Mesh(testGeometry, testMaterial);
+        testMesh.position.copy(wall.position);
+        testMesh.quaternion.copy(wall.quaternion);
+        testMesh.visible = false;
+        scene.add(testMesh);
 
-            const testGeometry = new THREE.BoxGeometry(
-                target.x,
-                target.y,
-                target.z
-            );
+        world.createCollider(cubeColliderDesc);
+    }
 
-            const testMesh = new THREE.Mesh(testGeometry, testMaterial);
-            testMesh.position.copy(wall.position);
-            testMesh.quaternion.copy(wall.quaternion);
-            testMesh.visible = false;
-            scene.add(testMesh);
+    // create rigid body and collider for all exploding rocks
+    for (const explodingRock of explodingRocks) {
+        const rigidBodyDesc = RAPIER.RigidBodyDesc.dynamic().setTranslation(
+            explodingRock.mesh.position.x,
+            explodingRock.mesh.position.y,
+            explodingRock.mesh.position.z
+        );
+        const explodingRockRigidBody = world.createRigidBody(rigidBodyDesc);
+        const colliderDesc = RAPIER.ColliderDesc.convexHull(
+            explodingRock.mesh.geometry.attributes.position.array
+        )
+            .setDensity(0.1)
+            .setFriction(0.4);
 
-            world.createCollider(cubeColliderDesc);
-        }
+        world
+            .createCollider(colliderDesc, explodingRockRigidBody)
+            .setRestitution(0.4);
 
-        // create rigid body and collider for all exploding rocks
-        for (const explodingRock of explodingRocks) {
-            const rigidBodyDesc = RAPIER.RigidBodyDesc.dynamic().setTranslation(
-                explodingRock.mesh.position.x,
-                explodingRock.mesh.position.y,
-                explodingRock.mesh.position.z
-            );
-            const explodingRockRigidBody = world.createRigidBody(rigidBodyDesc);
-            const colliderDesc = RAPIER.ColliderDesc.convexHull(
-                explodingRock.mesh.geometry.attributes.position.array
-            )
-                .setDensity(0.1)
-                .setFriction(0.4);
+        explodingRock.rigidBody = explodingRockRigidBody;
 
-            world
-                .createCollider(colliderDesc, explodingRockRigidBody)
-                .setRestitution(0.4);
-
-            explodingRock.rigidBody = explodingRockRigidBody;
-
-            envLoaded = true;
-        }
-    });
+        envLoaded = true;
+    }
 });
 
 // debug
