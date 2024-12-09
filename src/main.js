@@ -106,6 +106,8 @@ gltfLoader.load("models/rock-exploding.glb", (loadedAsset) => {
             if (child.name.startsWith("explodingRocks")) {
                 explodingRocks.push({
                     mesh: child,
+                    originalPosition: child.position.clone(),
+                    originalRotation: child.rotation.clone(),
                 });
                 child.material = rockMaterial;
                 child.material.side = THREE.DoubleSide;
@@ -113,7 +115,6 @@ gltfLoader.load("models/rock-exploding.glb", (loadedAsset) => {
             } else {
                 child.material = bakedMaterial;
             }
-
             if (child.name.startsWith("plants")) {
                 child.material.side = THREE.DoubleSide;
             }
@@ -187,8 +188,14 @@ const loop = () => {
     world.step();
 
     for (const explodingRock of explodingRocks) {
-        explodingRock.mesh.position.copy(explodingRock.rigidBody.translation());
-        explodingRock.mesh.quaternion.copy(explodingRock.rigidBody.rotation());
+        if (explodingRock.rigidBody) {
+            explodingRock.mesh.position.copy(
+                explodingRock.rigidBody.translation()
+            );
+            explodingRock.mesh.quaternion.copy(
+                explodingRock.rigidBody.rotation()
+            );
+        }
     }
 
     renderer.render(scene, camera);

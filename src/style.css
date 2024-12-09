@@ -1,14 +1,15 @@
 * {
   margin: 0px;
   padding: 0px;
+  font-family: "Quicksand", sans-serif;
+  font-optical-sizing: auto;
+  font-weight: 400;
+  font-style: normal;
 }
 
 body {
   overflow: hidden;
-  font-family: "Quicksand", sans-serif;
-  font-optical-sizing: auto;
-  font-weight: 400;
-  font-style: normal;  
+
 }
 
 .overlay {
@@ -32,6 +33,9 @@ body {
   color: white;
   transition: transform 1s ease-out;
   cursor: pointer;
+  background: none;
+  border: 0px;
+  font-weight: 400;
 }
 
 .start-btn:hover {
@@ -51,6 +55,7 @@ body {
   transition: transform 0.5s, opacity 0.5s;
   cursor: pointer;
   z-index: -1;
+  border: 0px;
 }
 
 .reset-btn.active {
