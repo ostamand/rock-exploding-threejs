@@ -15,17 +15,23 @@ export default class Physics {
         );
         const unsubSetupPhysics = app.subscribe((state) => {
             if (!state.RAPIER || !state.envLoaded) return;
-            const { explodingRocks, walls, setWorld } = envStore.getState();
-            this.setup(explodingRocks, walls, setWorld);
+            this.setup();
             unsubSetupPhysics();
         });
     }
 
-    setup(explodingRocks, walls, setWorld) {
+    setup() {
+        const { explodingRocks, walls, setWorld, setEventQueue } =
+            envStore.getState();
+
         // physics
         const gravity = { x: 0.0, y: -9.81, z: 0 };
+
         const world = new this.RAPIER.World(gravity);
+        const eventQueue = new this.RAPIER.EventQueue(true);
+
         setWorld(world);
+        setEventQueue(eventQueue);
 
         // ground
         const groundColliderDesc = this.RAPIER.ColliderDesc.cuboid(
@@ -80,7 +86,9 @@ export const createRigidBodyForExplodingRock = (explodingRock) => {
         explodingRock.mesh.geometry.attributes.position.array
     )
         .setDensity(0.1)
-        .setFriction(0.4);
+        .setFriction(0.4)
+        .setActiveEvents(RAPIER.ActiveEvents.COLLISION_EVENTS)
+        .setContactForceEventThreshold(1);
 
     world
         .createCollider(colliderDesc, explodingRockRigidBody)

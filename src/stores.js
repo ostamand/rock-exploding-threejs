@@ -10,9 +10,11 @@ export const app = createStore((set) => ({
 }));
 
 export const envStore = createStore((set) => ({
+    explodingRocksHandles: [],
     explodingRocks: [],
     walls: [],
     world: null,
+    eventQueue: null,
     renderer: null,
     camera: null,
     setExplodingRocks: (explodingRocks) => set({ explodingRocks }),
@@ -20,4 +22,9 @@ export const envStore = createStore((set) => ({
     setWorld: (world) => set({ world }),
     setCamera: (camera) => set({ camera }),
     setRenderer: (renderer) => set({ renderer }),
+    setEventQueue: (eventQueue) => set({ eventQueue }),
+}));
+
+export const soundStore = createStore((set) => ({
+    rockCollions: [],
 }));

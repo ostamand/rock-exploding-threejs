@@ -48,8 +48,8 @@ export default class Inputs {
     }
 
     handleClickResetBtn() {
-        const { explodingRocks } = envStore.getState();
-        const { world } = envStore.getState();
+        const { explodingRocks, world } = envStore.getState();
+        app.setState({ playing: false });
         for (const explodingRock of explodingRocks) {
             // remove rigid body
             world.removeRigidBody(explodingRock.rigidBody);
@@ -63,6 +63,9 @@ export default class Inputs {
 
             explodingRock.rigidBody = explodingRockRigidBody;
         }
+        window.setTimeout(() => {
+            app.setState({ playing: true });
+        }, 250);
     }
 
     handleClickStartBtn() {

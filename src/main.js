@@ -47,6 +47,13 @@ const controls = new OrbitControls(camera, canvas);
 controls.enableDamping = true;
 controls.maxPolarAngle = Math.PI / 2; // don't go below ground
 
+// sound
+const collisionSound = new Audio(
+    "sounds/Impact Concrete Drop On Concrete Single 03.wav"
+);
+const ambientSound = new Audio("sounds/Ambience Nature 180 01.wav");
+ambientSound.play();
+
 // renderer
 const renderer = new THREE.WebGLRenderer({
     canvas,
@@ -178,18 +185,22 @@ groundMesh.visible = false;
 
 // loop
 
+const minDeltaForSound = 0.5;
+
 const clock = new THREE.Clock();
 let lastElapsedTime = 0;
+let lastPlayedSoundTime = minDeltaForSound;
 const loop = () => {
     // delta time
     const elapsedTime = clock.getElapsedTime();
     const deltaTime = elapsedTime - lastElapsedTime;
     lastElapsedTime = elapsedTime;
 
-    const { world, explodingRocks } = envStore.getState();
+    const { world, explodingRocks, eventQueue } = envStore.getState();
+    const { playing } = app.getState();
 
     world.timestep = Math.min(deltaTime, 0.1);
-    world.step();
+    world.step(eventQueue);
 
     for (const explodingRock of explodingRocks) {
         if (explodingRock.rigidBody) {
@@ -201,6 +212,17 @@ const loop = () => {
             );
         }
     }
+
+    // on collisions
+    eventQueue.drainCollisionEvents((handle1, handle2, started) => {
+        const deltaSound = elapsedTime - lastPlayedSoundTime;
+        if (started && playing && deltaSound >= minDeltaForSound) {
+            collisionSound.volume = Math.random() * 0.25 + 0.25;
+            collisionSound.currentTime = 0;
+            collisionSound.play();
+            lastPlayedSoundTime = elapsedTime;
+        }
+    });
 
     renderer.render(scene, camera);
     controls.update(deltaTime);
