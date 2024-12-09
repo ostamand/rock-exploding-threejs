@@ -13,7 +13,11 @@ export const envStore = createStore((set) => ({
     explodingRocks: [],
     walls: [],
     world: null,
+    renderer: null,
+    camera: null,
     setExplodingRocks: (explodingRocks) => set({ explodingRocks }),
     setWalls: (walls) => set({ walls }),
     setWorld: (world) => set({ world }),
+    setCamera: (camera) => set({ camera }),
+    setRenderer: (renderer) => set({ renderer }),
 }));

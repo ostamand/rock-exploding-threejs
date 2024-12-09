@@ -6,6 +6,8 @@ import { app, envStore } from "./stores.js";
 import Physics from "./physics.js";
 import Inputs from "./inputs.js";
 
+const { setCamera, setRenderer } = envStore.getState();
+
 new Physics();
 
 const params = {
@@ -33,6 +35,7 @@ const camera = new THREE.PerspectiveCamera(
     100
 );
 camera.position.set(10, 8, 12);
+setCamera(camera);
 
 // inputs
 
@@ -54,6 +57,7 @@ renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 renderer.setClearColor(0x3b3b3b);
+setRenderer(renderer);
 
 // lights
 const ambientLight = new THREE.AmbientLight(0xffffff, 4);

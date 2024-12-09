@@ -6,6 +6,22 @@ export default class Inputs {
         this.camera = camera;
         this.raycaster = raycaster;
 
+        window.addEventListener("resize", () => {
+            const { renderer, camera } = envStore.getState();
+
+            const width = window.innerWidth;
+            const height = window.innerHeight;
+
+            // update camera
+            camera.aspect = width / height;
+            camera.updateProjectionMatrix();
+
+            // update renderer
+            const pixelRatio = Math.min(window.devicePixelRatio, 2);
+            renderer.setSize(width, height);
+            renderer.setPixelRatio(pixelRatio);
+        });
+
         window.addEventListener("click", (event) => {
             this.handleClickExplodingRock(event.clientX, event.clientY);
         });
