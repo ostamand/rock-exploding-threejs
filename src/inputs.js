@@ -89,7 +89,7 @@ export default class Inputs {
     }
 
     handleClickStartBtn() {
-        const { setPlaying } = app.getState();
+        soundStore.getState().playAmbient();
 
         const overlay = document.querySelector(".overlay");
         overlay.classList.remove("active");
@@ -99,7 +99,7 @@ export default class Inputs {
 
         window.setTimeout(() => {
             overlay.remove();
-            setPlaying();
+            app.getState().setPlaying();
         }, 1000);
     }
 
@@ -150,8 +150,7 @@ export default class Inputs {
         }
 
         if (uniqueIntersect.size > 0) {
-            const { playExplosionSound } = soundStore.getState();
-            playExplosionSound();
+            soundStore.getState().playExplosionSound();
         }
     }
 }

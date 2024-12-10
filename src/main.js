@@ -247,7 +247,6 @@ const loop = () => {
 const unsubStartLoop = app.subscribe((state) => {
     if (state.RAPIER && state.envLoaded) {
         loop();
-        playAmbient();
         unsubStartLoop();
     }
 });
