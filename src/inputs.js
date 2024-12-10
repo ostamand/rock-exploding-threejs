@@ -65,7 +65,10 @@ export default class Inputs {
 
     handleClickResetBtn() {
         const { explodingRocks, world } = envStore.getState();
+        const { playResetSound } = soundStore.getState();
+
         app.setState({ playing: false });
+        playResetSound();
         for (const explodingRock of explodingRocks) {
             // remove rigid body
             world.removeRigidBody(explodingRock.rigidBody);

@@ -32,6 +32,7 @@ export const soundStore = createStore((set, get) => ({
     rockCollisionSounds: [],
     explosionSound: null,
     ambientSound: null,
+    resetSound: null,
     playRandomSound: () => {
         const { rockCollisionSounds, playSound } = get();
         if (!playSound) return;
@@ -43,6 +44,15 @@ export const soundStore = createStore((set, get) => ({
         randomSound.stop();
         randomSound.volume(volume);
         randomSound.play();
+    },
+    playResetSound: () => {
+        const { resetSound } = get();
+        if (resetSound) {
+            resetSound.play();
+            setTimeout(() => {
+                resetSound.stop();
+            }, 500);
+        }
     },
     playExplosionSound: () => {
         const { explosionSound, explosionCount } = get();
@@ -71,7 +81,7 @@ export const soundStore = createStore((set, get) => ({
         set({ explosionSound });
     },
     setPlaySound: (playSound) => {
-        const { ambientSound } = get();
+        const { ambientSound, explosionSound } = get();
         if (!playSound) {
             ambientSound?.stop();
             explosionSound?.stop();
@@ -79,5 +89,9 @@ export const soundStore = createStore((set, get) => ({
             ambientSound?.play();
         }
         set({ playSound });
+    },
+    setResetSound: (sound) => {
+        const resetSound = new Howl({ src: [sound], volume: 0.5 });
+        set({ resetSound });
     },
 }));

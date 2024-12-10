@@ -16,6 +16,7 @@ const {
     setAmbientSound,
     playAmbient,
     setExplosionSound,
+    setResetSound,
 } = soundStore.getState();
 
 setRockCollisionSounds([
@@ -24,6 +25,9 @@ setRockCollisionSounds([
 ]);
 setExplosionSound("sounds/Explosion Large Bright 02.wav");
 setAmbientSound("sounds/Ambience Nature 180 01.wav");
+setResetSound(
+    "sounds/Science Fiction Sci-Fi Electronic Cloaking Device 01.wav"
+);
 
 // physics
 
