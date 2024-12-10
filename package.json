@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "dat.gui": "^0.7.9",
+    "howler": "^2.2.4",
     "three": "^0.171.0",
     "vite": "^6.0.3",
     "zustand": "^5.0.2"

@@ -2,11 +2,24 @@ import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import * as dat from "dat.gui";
-import { app, envStore } from "./stores.js";
+import { app, envStore, soundStore } from "./stores.js";
 import Physics from "./physics.js";
 import Inputs from "./inputs.js";
 
 const { setCamera, setRenderer } = envStore.getState();
+const {
+    setRockCollisionSounds,
+    playRandomSound,
+    setAmbientSound,
+    playAmbient,
+} = soundStore.getState();
+
+setRockCollisionSounds([
+    "sounds/Impact Concrete Drop On Concrete Single 02.wav",
+    "sounds/Impact Concrete Drop On Concrete Single 03.wav",
+]);
+
+setAmbientSound("sounds/Ambience Nature 180 01.wav");
 
 new Physics();
 
@@ -185,19 +198,19 @@ groundMesh.visible = false;
 
 // loop
 
-const minDeltaForSound = 0.5;
+const minDeltaForSound = 0.25;
 
 const clock = new THREE.Clock();
 let lastElapsedTime = 0;
 let lastPlayedSoundTime = minDeltaForSound;
 const loop = () => {
+    const { world, explodingRocks, eventQueue } = envStore.getState();
+    const { playing } = app.getState();
+
     // delta time
     const elapsedTime = clock.getElapsedTime();
     const deltaTime = elapsedTime - lastElapsedTime;
     lastElapsedTime = elapsedTime;
-
-    const { world, explodingRocks, eventQueue } = envStore.getState();
-    const { playing } = app.getState();
 
     world.timestep = Math.min(deltaTime, 0.1);
     world.step(eventQueue);
@@ -217,9 +230,7 @@ const loop = () => {
     eventQueue.drainCollisionEvents((handle1, handle2, started) => {
         const deltaSound = elapsedTime - lastPlayedSoundTime;
         if (started && playing && deltaSound >= minDeltaForSound) {
-            collisionSound.volume = Math.random() * 0.25 + 0.25;
-            collisionSound.currentTime = 0;
-            collisionSound.play();
+            playRandomSound();
             lastPlayedSoundTime = elapsedTime;
         }
     });
@@ -232,6 +243,7 @@ const loop = () => {
 const unsubStartLoop = app.subscribe((state) => {
     if (state.RAPIER && state.envLoaded) {
         loop();
+        playAmbient();
         unsubStartLoop();
     }
 });

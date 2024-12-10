@@ -1,5 +1,6 @@
 import { envStore, app } from "./stores";
 import { createRigidBodyForExplodingRock } from "./physics";
+import * as THREE from "three";
 
 export default class Inputs {
     constructor(camera, raycaster) {
@@ -107,14 +108,23 @@ export default class Inputs {
                     (data) => data.mesh.name === name
                 );
 
-                data.rigidBody.applyImpulse(
-                    {
-                        x: Math.random() * 2 - 1,
-                        y: Math.random() * 2 - 1,
-                        z: Math.random() * 2 - 1,
-                    },
-                    true
+                const randomDirection = new THREE.Vector3(
+                    Math.random() * 2 - 1,
+                    Math.random() * 2 - 1,
+                    Math.random() * 2 - 1
+                ).normalize();
+
+                const randomMagnitude = Math.random() * 3 + 0.5;
+
+                const randomImpulse = randomDirection.multiply(
+                    new THREE.Vector3(
+                        randomMagnitude,
+                        randomMagnitude,
+                        randomMagnitude
+                    )
                 );
+
+                data.rigidBody.applyImpulse(randomImpulse, true);
                 uniqueIntersect.add(name);
             }
         }

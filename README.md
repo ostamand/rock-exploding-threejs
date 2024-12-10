@@ -12,7 +12,7 @@ Exploding Rocks is a proof-of-concept project demonstrating the integration of a
 -   **Hybrid Shadows:** Combines static baked shadows and dynamic shadows for realistic lighting effects.
 -   **Physics Simulation:** Powered by [Rapier js](https://rapier.rs/) for Physics simulation
 -   **Interactive Raycasting:** Enables user interactions by detecting clicks on specific 3D objects.
--   \*\*Built with [Three.js](https://threejs.org/), [Rapier js](https://rapier.rs/) and deployed seamlessly using [Vite](https://vite.dev/) to [Github pages](https://pages.github.com/).
+-   Built with [Three.js](https://threejs.org/), [Rapier js](https://rapier.rs/) and deployed seamlessly using [Vite](https://vite.dev/) to [Github pages](https://pages.github.com/).
 
 ## Getting Started
 

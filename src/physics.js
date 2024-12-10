@@ -88,7 +88,7 @@ export const createRigidBodyForExplodingRock = (explodingRock) => {
         .setDensity(0.1)
         .setFriction(0.4)
         .setActiveEvents(RAPIER.ActiveEvents.COLLISION_EVENTS)
-        .setContactForceEventThreshold(1);
+        .setContactForceEventThreshold(2);
 
     world
         .createCollider(colliderDesc, explodingRockRigidBody)
