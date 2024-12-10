@@ -7,6 +7,7 @@ import Physics from "./physics.js";
 import Inputs from "./inputs.js";
 
 const { setCamera, setRenderer } = envStore.getState();
+
 const {
     setRockCollisionSounds,
     playRandomSound,
@@ -143,7 +144,6 @@ gltfLoader.load("models/rock-exploding.glb", (loadedAsset) => {
                 child.material.side = THREE.DoubleSide;
             }
             if (child.name.startsWith("wall")) {
-                //child.visible = false;
                 walls.push(child);
             }
         }

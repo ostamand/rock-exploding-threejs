@@ -42,10 +42,35 @@ body {
   transform: scale(1.1);
 }
 
-.reset-btn {
+.right-toolbar {
   position: absolute;
   right: 30px;
   top: 10px;
+  display: flex;
+  align-items: center;
+}
+
+.sound-btn {
+  font-size: 26px;
+  background: none;
+  border: 0px;
+  opacity: 0%;
+  transition: transform 0.5s, opacity 0.5s;
+  z-index: -1;
+}
+
+.sound-btn.active {
+  opacity: 50%;
+  z-index: 1;
+}
+
+.right-toolbar .sound-btn:hover {
+  transform: scale(1.1);
+  opacity: 100%;
+}
+
+.reset-btn {
+  margin-left: 10px;
   font-size: 26px;
   color: white;
   background-color: black;

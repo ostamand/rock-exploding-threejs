@@ -1,4 +1,4 @@
-import { envStore, app } from "./stores";
+import { envStore, app, soundStore } from "./stores";
 import { createRigidBodyForExplodingRock } from "./physics";
 import * as THREE from "three";
 
@@ -31,6 +31,21 @@ export default class Inputs {
             const touch = event.touches[0];
             this.handleClickExplodingRock(touch.clientX, touch.clientY);
         });
+
+        document
+            .querySelector(".sound-btn")
+            .addEventListener("click", (event) => {
+                const { setPlaySound, playSound } = soundStore.getState();
+                if (playSound) {
+                    event.target.classList.remove("fa-volume-high");
+                    event.target.classList.add("fa-volume-xmark");
+                } else {
+                    event.target.classList.add("fa-volume-high");
+                    event.target.classList.remove("fa-volume-xmark");
+                }
+                setPlaySound(!playSound);
+                event.preventDefault();
+            });
 
         document
             .querySelector(".start-btn")
@@ -76,6 +91,7 @@ export default class Inputs {
         overlay.classList.remove("active");
 
         document.querySelector(".reset-btn").classList.add("active");
+        document.querySelector(".sound-btn").classList.add("active");
 
         window.setTimeout(() => {
             overlay.remove();

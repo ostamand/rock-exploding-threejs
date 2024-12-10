@@ -27,10 +27,12 @@ export const envStore = createStore((set) => ({
 }));
 
 export const soundStore = createStore((set, get) => ({
+    playSound: true,
     rockCollisionSounds: [],
     ambientSound: null,
     playRandomSound: () => {
-        const { rockCollisionSounds } = get();
+        const { rockCollisionSounds, playSound } = get();
+        if (!playSound) return;
         const randomSound =
             rockCollisionSounds[
                 Math.floor(Math.random() * rockCollisionSounds.length)
@@ -55,5 +57,15 @@ export const soundStore = createStore((set, get) => ({
     setAmbientSound: (sound) => {
         const ambientSound = new Howl({ src: [sound] });
         set({ ambientSound });
+    },
+    setPlaySound: (playSound) => {
+        const { ambientSound } = get();
+        if (ambientSound && !playSound) {
+            ambientSound.stop();
+        }
+        if (ambientSound && playSound) {
+            ambientSound.play();
+        }
+        set({ playSound });
     },
 }));
