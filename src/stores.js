@@ -46,7 +46,8 @@ export const soundStore = createStore((set, get) => ({
         randomSound.play();
     },
     playResetSound: () => {
-        const { resetSound } = get();
+        const { resetSound, playSound } = get();
+        if (!playSound) return;
         if (resetSound) {
             resetSound.play();
             setTimeout(() => {
@@ -55,14 +56,16 @@ export const soundStore = createStore((set, get) => ({
         }
     },
     playExplosionSound: () => {
-        const { explosionSound, explosionCount } = get();
+        const { explosionSound, explosionCount, playSound } = get();
+        if (!playSound) return;
         if (explosionCount > 0) {
             explosionSound?.play();
             set({ explosionCount: explosionCount - 1 });
         }
     },
     playAmbient: () => {
-        const { ambientSound } = get();
+        const { ambientSound, playSound } = get();
+        if (!playSound) return;
         ambientSound?.play();
     },
     setRockCollisionSounds: (sounds) => {
