@@ -81,6 +81,7 @@ export default class Inputs {
         }
         window.setTimeout(() => {
             app.setState({ playing: true });
+            soundStore.setState({ explosionCount: 1 });
         }, 250);
     }
 
@@ -143,6 +144,11 @@ export default class Inputs {
                 data.rigidBody.applyImpulse(randomImpulse, true);
                 uniqueIntersect.add(name);
             }
+        }
+
+        if (uniqueIntersect.size > 0) {
+            const { playExplosionSound } = soundStore.getState();
+            playExplosionSound();
         }
     }
 }

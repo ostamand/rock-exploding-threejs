@@ -28,7 +28,9 @@ export const envStore = createStore((set) => ({
 
 export const soundStore = createStore((set, get) => ({
     playSound: true,
+    explosionCount: 1,
     rockCollisionSounds: [],
+    explosionSound: null,
     ambientSound: null,
     playRandomSound: () => {
         const { rockCollisionSounds, playSound } = get();
@@ -42,10 +44,16 @@ export const soundStore = createStore((set, get) => ({
         randomSound.volume(volume);
         randomSound.play();
     },
+    playExplosionSound: () => {
+        const { explosionSound, explosionCount } = get();
+        if (explosionCount > 0) {
+            explosionSound?.play();
+            set({ explosionCount: explosionCount - 1 });
+        }
+    },
     playAmbient: () => {
         const { ambientSound } = get();
-        //ambientSound.stop();
-        ambientSound.play();
+        ambientSound?.play();
     },
     setRockCollisionSounds: (sounds) => {
         const rockCollisionSounds = [];
@@ -55,16 +63,20 @@ export const soundStore = createStore((set, get) => ({
         set({ rockCollisionSounds });
     },
     setAmbientSound: (sound) => {
-        const ambientSound = new Howl({ src: [sound] });
+        const ambientSound = new Howl({ src: [sound], volume: 2 });
         set({ ambientSound });
+    },
+    setExplosionSound: (sound) => {
+        const explosionSound = new Howl({ src: [sound], volume: 0.1 });
+        set({ explosionSound });
     },
     setPlaySound: (playSound) => {
         const { ambientSound } = get();
-        if (ambientSound && !playSound) {
-            ambientSound.stop();
-        }
-        if (ambientSound && playSound) {
-            ambientSound.play();
+        if (!playSound) {
+            ambientSound?.stop();
+            explosionSound?.stop();
+        } else {
+            ambientSound?.play();
         }
         set({ playSound });
     },

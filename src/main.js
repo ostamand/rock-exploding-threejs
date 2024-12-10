@@ -8,19 +8,24 @@ import Inputs from "./inputs.js";
 
 const { setCamera, setRenderer } = envStore.getState();
 
+// setup sounds
+
 const {
     setRockCollisionSounds,
     playRandomSound,
     setAmbientSound,
     playAmbient,
+    setExplosionSound,
 } = soundStore.getState();
 
 setRockCollisionSounds([
     "sounds/Impact Concrete Drop On Concrete Single 02.wav",
     "sounds/Impact Concrete Drop On Concrete Single 03.wav",
 ]);
-
+setExplosionSound("sounds/Explosion Large Bright 02.wav");
 setAmbientSound("sounds/Ambience Nature 180 01.wav");
+
+// physics
 
 new Physics();
 
@@ -62,11 +67,6 @@ controls.enableDamping = true;
 controls.maxPolarAngle = Math.PI / 2; // don't go below ground
 
 // sound
-const collisionSound = new Audio(
-    "sounds/Impact Concrete Drop On Concrete Single 03.wav"
-);
-const ambientSound = new Audio("sounds/Ambience Nature 180 01.wav");
-ambientSound.play();
 
 // renderer
 const renderer = new THREE.WebGLRenderer({
